@@ -17,6 +17,25 @@ const Modal = {
     }
 }
 
+const Negative = {
+    open () {
+        //Abrir modal
+        //Adicionar a class active ao modal
+        document
+        .querySelector('.negative-overlay')
+        .classList
+        .add('active')
+    },
+    close() {
+        // fechar o modal
+        //remover a class active do modal
+        document
+        .querySelector('.negative-overlay')
+        .classList
+        .remove('active')
+    }
+}
+
 const Storage = {
     get() {
         return JSON.parse(localStorage.getItem('dev.finances:transactions')) || [] // transformando string em array
@@ -46,17 +65,18 @@ const Transaction = {
 
         let income = 0;
         Transaction.all.forEach(transaction => {
-            if (transaction.amount > 0) {
+            if(transaction.amount > 0) {
                 income += transaction.amount;
             }
         })
         return income;
     },
+
     expenses() {
         let expense = 0;
         Transaction.all.forEach(transaction => {
-            if (transaction.amount < 0) {
-                expense += transaction.amount;
+            if(transaction.amount < 0) {
+                expense += transaction.amount;   
             }
         })
        return expense;
@@ -146,6 +166,7 @@ const Form = {
     description: document.querySelector('input#description'),
     amount: document.querySelector('input#amount'),
     date: document.querySelector('input#date'),
+    
 
     getValues () {
         return {
@@ -163,6 +184,10 @@ const Form = {
             amount.trim() === "" || 
             date.trim() === "") {
                 throw new Error("Por favor, preencha todos os campos")
+        }
+
+        if( amount.trim() < 0) {
+            throw new Error("Valor de rendimento não pode ser menor que zero!")
         }
     },
 
@@ -185,6 +210,7 @@ const Form = {
         Form.amount.value = ""
         Form.date.value = ""
     },
+    
    
     submit(event) {
         event.preventDefault() //interrompe o comportamento padrão
@@ -195,6 +221,72 @@ const Form = {
             Transaction.add(transaction)
             Form.clearFields()
             Modal.close()
+
+        } catch (error) {
+            alert(error.message)
+        }
+    }
+}
+
+const NegativeForm = {
+    description: document.querySelector('input#NewDescription'),
+    amount: document.querySelector('input#NewAmount'),
+    date: document.querySelector('input#NewDate'),
+    
+
+    getValues () {
+        return {
+            description: NegativeForm.description.value,
+            amount: NegativeForm.amount.value,
+            date: NegativeForm.date.value
+        }
+    },
+
+    validateFields() {
+        const { description, amount, date } = NegativeForm.getValues()
+        
+        if(
+            description.trim() ==="" || 
+            amount.trim() === ""  || 
+            date.trim() === "") {
+                throw new Error("Por favor, preencha todos os campos")
+        }
+
+        if(amount.trim() > 0) {
+            throw new Error("Valor de despesa tem que ser menor que zero!")
+        }
+    },
+
+    formatValues() {
+        let { description, amount, date } = NegativeForm.getValues()
+
+        amount = Utils.formatAmount(amount);
+
+        date = Utils.formatDate(date);
+        
+        return {
+            description,
+            amount,
+            date
+        }
+    },
+
+    clearFields() {
+        NegativeForm.description.value = ""
+        NegativeForm.amount.value = ""
+        NegativeForm.date.value = ""
+    },
+    
+   
+    submit(event) {
+        event.preventDefault() //interrompe o comportamento padrão
+        
+        try {
+            NegativeForm.validateFields()
+            const transaction = NegativeForm.formatValues()
+            Transaction.add(transaction)
+            NegativeForm.clearFields()
+            Negative.close()
 
         } catch (error) {
             alert(error.message)
